@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Snake Game</title>
+    <style>
+      body {
+        background-color: #9cbd48;
+      }
+      .snakehome {
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        transform: translate(-50%, -50%);
+        border: 2px solid black;
+        display: grid;
+        grid-template-columns: repeat(35, 1fr);
+        grid-template-rows: repeat(18, 1fr);
+        gap: 0px;
+        width: 80vw;
+        height: 80vh;
+      }
+      .cell {
+        background-color: #9cbd48;
+        border-radius: 30%;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="snakehome"></div>
+    <script>
+      const snakebox = [];
+      const snakehomeContainer = document.querySelector(".snakehome");
+      for (let row = 0; row < 18; row++) {
+        snakebox.push([]);
+        for (let column = 0; column < 35; column++) {
+          const cell = document.createElement("div");
+          cell.classList.add("cell");
+          snakehomeContainer.appendChild(cell);
+          snakebox[row][column] = cell;
+        }
+      }
+
+      let snakeRows = [7];
+      let snakeCols = [14];
+      let intendedDirection = null;
+      let gameActive = true;
+      let timeloop;
+      let isKeyDown = false;
+      let randomrow, randomcolumn;
+
+      document.addEventListener("keydown", handleArrowKey);
+      document.addEventListener("keyup", () => { isKeyDown = false; });
+
+      function handleArrowKey(event) {
+        if (!gameActive || isKeyDown) return;
+        isKeyDown = true;
+
+        const keyMap = {
+          ArrowUp: [-1, 0, "ArrowDown"],
+          ArrowDown: [1, 0, "ArrowUp"],
+          ArrowLeft: [0, -1, "ArrowRight"],
+          ArrowRight: [0, 1, "ArrowLeft"],
+        };
+
+        const newDirection = keyMap[event.key];
+        if (newDirection && (!intendedDirection || intendedDirection[2] !== event.key)) {
+          intendedDirection = newDirection;
+          clearInterval(timeloop);
+          timeloop = setInterval(moveSnake, 150);
+        }
+      }
+
+      function moveSnake() {
+        const headRow = snakeRows[0] + intendedDirection[0];
+        const headCol = snakeCols[0] + intendedDirection[1];
+
+        if (headRow < 0 || headRow >= 18 || headCol < 0 || headCol >= 35 || snakeRows.some((row, index) => row === headRow && snakeCols[index] === headCol)) {
+          endGame();
+          return;
+        }
+
+        snakeRows.unshift(headRow);
+        snakeCols.unshift(headCol);
+
+        if (headRow === randomrow && headCol === randomcolumn) {
+          generateFood();
+        } else {
+          const tailRow = snakeRows.pop();
+          const tailCol = snakeCols.pop();
+          snakebox[tailRow][tailCol].style.backgroundColor = "#9cbd48";
+        }
+
+        snakeRows.forEach((row, index) => {
+          snakebox[row][snakeCols[index]].style.backgroundColor = "black";
+        });
+      }
+
+      function endGame() {
+        console.log("game over");
+        clearInterval(timeloop);
+        gameActive = false;
+        document.removeEventListener("keydown", handleArrowKey);
+      }
+
+      function generateFood() {
+        do {
+          randomrow = Math.floor(Math.random() * 18);
+          randomcolumn = Math.floor(Math.random() * 35);
+        } while (snakeRows.some((row, index) => row === randomrow && snakeCols[index] === randomcolumn));
+        snakebox[randomrow][randomcolumn].style.backgroundColor = "#bd5a48";
+      }
+
+      generateFood();
+    </script>
+  </body>
+</html>

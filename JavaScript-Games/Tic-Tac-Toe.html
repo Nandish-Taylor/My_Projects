@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>TicTacToe</title>
+    <style>
+      body {
+        background: linear-gradient(45deg, #ff6b81, #f9c6d0);
+        font-family: "Arial", sans-serif;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        height: 100vh;
+        margin: 0;
+      }
+      .papagrid {
+        display: grid;
+        grid-template-columns: 150px 150px 150px;
+        grid-template-rows: 150px 150px 150px;
+        gap: 15px;
+        margin-top: 20px;
+      }
+      .childgrid {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: 5px solid #601740;
+        background-color: #f4618b;
+        border-radius: 20px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        box-shadow: 0 8px 15px rgba(0, 0, 0, 0.2);
+      }
+      .childgrid:hover {
+        background-color: #ff9aae;
+        border-color: #fff;
+        transform: scale(1.1);
+      }
+      .forO-X {
+        font-size: 90px;
+        color: white;
+        font-weight: bolder;
+        transition: all 0.3s ease;
+        transform: scale(0);
+      }
+      .forO-X.show {
+        transform: scale(1);
+      }
+      .winner {
+        margin-top: 20px;
+        background-color: #3db4b4; /* Teal color */
+        color: white;
+        padding: 20px;
+        border-radius: 15px;
+        font-size: 40px;
+        text-align: center;
+        animation: slide-in 0.5s forwards;
+      }
+      .winner button {
+        margin-top: 15px;
+        padding: 10px 20px;
+        background-color: #ff6b81;
+        border: none;
+        border-radius: 10px;
+        color: white;
+        cursor: pointer;
+        font-size: 20px;
+        transition: background-color 0.3s;
+      }
+      .winner button:hover {
+        background-color: #ff4d6d;
+      }
+      @keyframes slide-in {
+        from {
+          transform: translateY(-30px);
+          opacity: 0;
+        }
+        to {
+          transform: translateY(0);
+          opacity: 1;
+        }
+      }
+      .ttt {
+        font-size: 80px;
+        font-weight: bold;
+        color: white;
+        text-shadow: 2px 2px 4px #601740;
+        margin-top: -50px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="ttt">TIC-TAC-TOE</div>
+    <div class="papagrid">
+      <div class="childgrid"></div>
+      <div class="childgrid"></div>
+      <div class="childgrid"></div>
+      <div class="childgrid"></div>
+      <div class="childgrid"></div>
+      <div class="childgrid"></div>
+      <div class="childgrid"></div>
+      <div class="childgrid"></div>
+      <div class="childgrid"></div>
+    </div>
+    <script>
+      let Osturn = true;
+      let player;
+      let windiv;
+      let tiediv;
+      const arraygrids = Array.from(document.querySelectorAll(".childgrid"));
+      const win = [
+        [0, 1, 2],
+        [3, 4, 5],
+        [6, 7, 8],
+        [0, 3, 6],
+        [1, 4, 7],
+        [2, 5, 8],
+        [0, 4, 8],
+        [2, 4, 6],
+      ];
+
+      function gamestarts() {
+        for (let i = 0; i < 9; i++) {
+          arraygrids[i].addEventListener("click", handleClick);
+        }
+      }
+      function handleClick() {
+        if (this.innerText === "") {
+          if (Osturn) {
+            player = "O";
+          } else {
+            player = "X";
+          }
+          const subdiv = document.createElement("div");
+          subdiv.classList.add("forO-X");
+          subdiv.innerText = player;
+          this.appendChild(subdiv);
+          setTimeout(() => subdiv.classList.add("show"), 50); // Animation for XO
+
+          if (checkwin()) {
+            removeEventListeners();
+          }
+          Osturn = !Osturn;
+        }
+        if (check_tie()) {
+          tiediv = document.createElement("div");
+          tiediv.classList.add("winner");
+          tiediv.innerText = "It's a TIE!";
+          const restartButton = document.createElement("button");
+          restartButton.textContent = "Restart?";
+          document.body.appendChild(tiediv);
+          tiediv.appendChild(restartButton);
+          restartButton.addEventListener("click", restart);
+        }
+      }
+
+      function checkwin() {
+        for (let a = 0; a < 8; a++) {
+          if (
+            arraygrids[win[a][0]].innerText === player &&
+            arraygrids[win[a][1]].innerText === player &&
+            arraygrids[win[a][2]].innerText === player
+          ) {
+            windiv = document.createElement("div");
+            windiv.classList.add("winner");
+            windiv.innerText = player + " Wins!!!";
+            const restartButton = document.createElement("button");
+            restartButton.textContent = "Restart?";
+            document.body.appendChild(windiv);
+            windiv.appendChild(restartButton);
+            restartButton.addEventListener("click", restart);
+            return true;
+          }
+        }
+        return false;
+      }
+
+      function removeEventListeners() {
+        for (let i = 0; i < 9; i++) {
+          arraygrids[i].removeEventListener("click", handleClick);
+        }
+      }
+
+      function restart() {
+        for (let i = 0; i < 9; i++) {
+          arraygrids[i].innerHTML = "";
+        }
+        if (windiv) {
+          windiv.remove();
+        }
+        if (tiediv) {
+          tiediv.remove();
+        }
+        Osturn = true;
+        gamestarts();
+      }
+
+      function check_tie() {
+        for (let i = 0; i < 9; i++) {
+          if (arraygrids[i].innerText === "") {
+            return false;
+          }
+        }
+        return true;
+      }
+
+      gamestarts();
+    </script>
+  </body>
+</html>

@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>2048 Game</title>
+    <style>
+      body {
+        background-color: rgb(230, 190, 208);
+      }
+      .papagrid {
+        margin-bottom: 50px;
+        margin-left: 600px;
+        margin-top: 200px;
+        display: grid;
+        grid-template-columns: 120px 120px 120px 120px;
+        grid-template-rows: 120px 120px 120px 120px;
+        gap: 15px;
+      }
+      .childgrid {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        border: 5px solid rgb(96, 23, 64);
+        background-color: rgb(244, 97, 139);
+        border-radius: 20px;
+        font-size: 60px;
+        font-weight: bolder;
+      }
+      .inputgrid {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        margin-left: 800px;
+        height: 110px;
+        width: 110px;
+        border: 5px solid rgb(96, 23, 64);
+        background-color: rgb(244, 97, 139);
+        border-radius: 20px;
+        font-size: 60px;
+        font-weight: bolder;
+        cursor: grab;
+      }
+      .hover {
+        background-color: rgb(208, 125, 172);
+        border: 5px solid rgb(248, 212, 235);
+      }
+      .helperdiv {
+        position: absolute;
+        top: 350px;
+        left: 150px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100px;
+        width: 200px;
+        background-color: #fcffcf;
+        border: 5px solid rgb(97, 87, 63);
+        border-radius: 23px;
+        font-size: 30px;
+        font-weight: bold;
+        cursor: pointer;
+      }
+      .gameover {
+        position: absolute;
+        height: 100vh;
+        width: 1000px;
+        top: 0px;
+        left: 300px;
+        background-color: #393333;
+        font: 40px aliceblue;
+      }
+      .restart-button {
+        height: 100px;
+        width: 300px;
+        font-size: 36px;
+        background-color: rgb(145, 145, 240);
+      }
+      .scorediv
+      {
+        height: 100px; width: 300px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        position: absolute;
+        top: 50px;
+        left: 715px;
+        background-color: #fcffcf;
+        border: 5px solid rgb(97, 87, 63);
+        border-radius: 23px;
+        font-size: 30px;
+        font-weight: bolder;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="papagrid">
+      <div class="childgrid"></div>
+      <div class="childgrid"></div>
+      <div class="childgrid"></div>
+      <div class="childgrid"></div>
+      <div class="childgrid"></div>
+      <div class="childgrid"></div>
+      <div class="childgrid"></div>
+      <div class="childgrid"></div>
+      <div class="childgrid"></div>
+      <div class="childgrid"></div>
+      <div class="childgrid"></div>
+      <div class="childgrid"></div>
+      <div class="childgrid"></div>
+      <div class="childgrid"></div>
+      <div class="childgrid"></div>
+      <div class="childgrid"></div>
+    </div>
+    <div class="inputgrid" draggable="true"></div>
+    <div class="helperdiv"></div>
+    <div class="scorediv"></div>
+  </body>
+  <script>
+    const arraygrids = Array.from(document.querySelectorAll(".childgrid"));
+    const inputgridjs = document.querySelector(".inputgrid");
+    const helpgridjs = document.querySelector(".helperdiv");
+    const scorecountbox = document.querySelector(".scorediv");
+    let newscore = 0;
+    let score_counter = 0;
+    scorecountbox.innerText = "TOTAL SCORE - " + newscore;
+    let numberofhelp = 0;
+    helpgridjs.innerText = "Help Left =>  " + numberofhelp;
+    helpgridjs.addEventListener("click", () => {
+      if (numberofhelp > 0) {
+        inputgridjs.innerText = "";
+        inputgridjs.innerText = randomnums();
+        numberofhelp--;
+        helpgridjs.innerText = "Help Left =>  " + numberofhelp;
+      }
+    });
+    let counter = 0;
+    function gamestarts() {
+      draganddrop();
+    }
+
+    function draganddrop() {
+      inputgridjs.innerText = randomnums();
+      //drag and move the inputgrid
+      inputgridjs.addEventListener("dragstart", (event) => {
+        event.dataTransfer.setData("text/plain", inputgridjs.innerText);
+      });
+      //hover (dragover and dragleave) and drop with preventdefault
+      for (let i = 0; i < 16; i++) {
+        arraygrids[i].addEventListener("dragover", (event) => {
+          event.preventDefault();
+          arraygrids[i].classList.add("hover");
+        });
+        arraygrids[i].addEventListener("dragleave", (event) => {
+          arraygrids[i].classList.remove("hover");
+        });
+        arraygrids[i].addEventListener("drop", (event) => {
+          if (arraygrids[i].innerText === "") {
+            event.preventDefault();
+            const data = event.dataTransfer.getData("text/plain");
+            arraygrids[i].textContent = data;
+            arraygrids[i].classList.remove("hover");
+            inputgridjs.innerText = "";
+            inputgridjs.innerText = randomnums();
+            checkcombination(i);
+          }
+        });
+      }
+      // Remove hover class when dragging ends
+      inputgridjs.addEventListener("dragend", (event) => {
+        for (let a = 0; a < 16; a++) {
+          arraygrids[a].classList.remove("hover");
+        }
+      });
+    }
+    function checkcombination(i) {
+      let do_double = false;
+      if (i != 3 && i != 7 && i != 11) {
+        if (arraygrids[i + 1]?.textContent === arraygrids[i].textContent) {
+          arraygrids[i + 1].textContent = "";
+          counter++;
+          score_counter++;
+          do_double = true;
+        }
+      }
+      if (arraygrids[i + 4]?.textContent === arraygrids[i].textContent) {
+        arraygrids[i + 4].textContent = "";
+        counter++;
+        score_counter++;
+        do_double = true;
+      }
+      if (i != 4 && i != 8 && i != 12) {
+        if (arraygrids[i - 1]?.textContent === arraygrids[i].textContent) {
+          arraygrids[i - 1].textContent = "";
+          do_double = true;
+          score_counter++;
+          counter++;
+        }
+      }
+      if (arraygrids[i - 4]?.textContent === arraygrids[i].textContent) {
+        arraygrids[i - 4].textContent = "";
+        do_double = true;
+        counter++;
+        score_counter++;
+      }
+      if (do_double) {
+        i_number = parseInt(arraygrids[i].textContent);
+        arraygrids[i].textContent = i_number * 2;
+        let score = (i_number * 2)*score_counter;
+        newscore += score;
+        scorecountbox.innerText = "TOTAL SCORE - " + newscore;
+      }
+      if (
+        arraygrids[i + 1]?.textContent === arraygrids[i].textContent ||
+        arraygrids[i + 4]?.textContent === arraygrids[i].textContent ||
+        arraygrids[i - 1]?.textContent === arraygrids[i].textContent ||
+        arraygrids[i - 4]?.textContent === arraygrids[i].textContent
+      ) {
+        checkcombination(i);
+      }
+
+      if (counter >= 3) {
+        numberofhelp++;
+        helpgridjs.innerText = "Help Left =>  " + numberofhelp;
+      }
+      counter = 0;
+      score_counter = 0;
+      if (check2048()) {
+        if (i == 3 || i == 7 || i == 11) {
+          arraygrids[i].textContent = "";
+          arraygrids[i - 1].textContent = "";
+          arraygrids[i - 4].textContent = "";
+          arraygrids[i - 5].textContent = "";
+          arraygrids[i + 3].textContent = "";
+          arraygrids[i + 4].textContent = "";
+        } else if (i == 4 || i == 8 || i == 12) {
+          arraygrids[i].textContent = "";
+          arraygrids[i - 3].textContent = "";
+          arraygrids[i - 4].textContent = "";
+          arraygrids[i + 1].textContent = "";
+          arraygrids[i + 4].textContent = "";
+          arraygrids[i + 5].textContent = "";
+        } else {
+          arraygrids[i].textContent = "";
+          arraygrids[i - 1].textContent = "";
+          arraygrids[i - 3].textContent = "";
+          arraygrids[i - 4].textContent = "";
+          arraygrids[i - 5].textContent = "";
+          arraygrids[i + 1].textContent = "";
+          arraygrids[i + 3].textContent = "";
+          arraygrids[i + 4].textContent = "";
+          arraygrids[i + 5].textContent = "";
+        }
+      }
+      if (gameover()) {
+        const newDiv = document.createElement("div");
+        newDiv.classList.add("gameover");
+
+        const restartButton = document.createElement("button");
+        restartButton.classList.add("restart-button");
+        restartButton.textContent = "Restart?";
+        restartButton.addEventListener("click", function () {
+          for (let p = 0; p < 16; p++) {
+            arraygrids[p].textContent = "";
+          }
+          numberofhelp = 0;
+          helpgridjs.innerText = "Help Left =>  " + numberofhelp;
+          counter = 0;
+          newscore = 0;
+          scorecountbox.innerText = "TOTAL SCORE - " + newscore;
+          document.body.removeChild(newDiv);
+          document.body.removeChild(restartButton);
+        });
+
+        newDiv.appendChild(restartButton);
+        document.body.appendChild(newDiv);
+      }
+    }
+    function randomnums() {
+  const numbers = [
+    2,4,8,16,32,64,128,256,512,1024,
+    2,2,2,2,2,2,2,2,2,2,
+    2,2,2,2,2,2,2,2,2,2,
+    2,2,2,2,2,2,2,2,2,2,
+    4,4,4,4,4,4,4,4,4,4,
+    4,4,4,4,4,4,4,4,4,128,
+    4,4,4,4,4,4,4,4,4,4,
+    8,8,8,8,8,8,8,8,8,8,
+    8,8,8,8,8,8,8,8,8,8,
+    16,16,16,16,16,32,32,32,64,64,
+  ];
+  randomindex = Math.floor(Math.random() * 100);
+  return numbers[randomindex];
+}
+
+    function gameover() {
+      for (let b = 0; b < 16; b++) {
+        if (arraygrids[b].textContent === "") {
+          return false; // If any cell is empty, game is not over
+        }
+      }
+      return true; // If no empty cells are found, game is over
+    }
+    function check2048() {
+      for (let g = 0; g < 16; g++) {
+        if (arraygrids[g].textContent === "2048") {
+          return true;
+        }
+      }
+      return false;
+    }
+    gamestarts();
+  </script>
+</html>
